@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Basket Analysis | Apriori System</title>
+
+<style>
+:root {
+  --bg: #080d0a;
+  --card: #111a14;
+  --ink: #e8f5ec;
+  --muted: #9aafa0;
+  --line: #293c2e;
+  --primary: #16a34a;
+  --primary2: #15803d;
+  --teal: #34d399;
+  --soft: #173523;
+  --danger: #f87171;
+  --shadow: 0 12px 35px rgba(0, 0, 0, .25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(ellipse at top left, rgba(22, 163, 74, .09), transparent 38%),
+    var(--bg);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+header {
+  background:
+    radial-gradient(ellipse at 85% 10%, rgba(52, 211, 153, .19), transparent 35%),
+    linear-gradient(125deg, #06100a, #10291a 58%, #064e32);
+  color: #fff;
+  padding: 52px 22px 46px;
+  border-bottom: 1px solid #245333;
+  position: relative;
+  overflow: hidden;
+}
+
+header::after {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  right: 6%;
+  top: -130px;
+  border: 1px solid rgba(74, 222, 128, .15);
+  border-radius: 50%;
+  box-shadow: 0 0 0 35px rgba(74, 222, 128, .035),
+              0 0 0 70px rgba(74, 222, 128, .025);
+  pointer-events: none;
+}
+
+.hero,
+.container {
+  max-width: 1180px;
+  margin: auto;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+}
+
+.eyebrow {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: .75rem;
+  font-weight: 800;
+  color: #86efac;
+  background: rgba(34, 197, 94, .10);
+  border: 1px solid rgba(74, 222, 128, .23);
+  border-radius: 999px;
+  padding: 7px 12px;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.12;
+  letter-spacing: -.045em;
+  margin: 19px 0 14px;
+  font-weight: 850;
+}
+
+.subtitle {
+  max-width: 760px;
+  color: #b8d6c1;
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.container {
+  padding: 30px 20px 55px;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.controls {
+  grid-template-columns: 1.1fr .9fr;
+}
+
+.stats {
+  grid-template-columns: repeat(4, 1fr);
+  margin: 22px 0;
+}
+
+.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+.card {
+  background: linear-gradient(145deg, #131e16, #0e1711);
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 23px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+  transition: border-color .2s ease, transform .2s ease;
+}
+
+.card:hover {
+  border-color: #3b6546;
+}
+
+h2 {
+  font-size: 1.12rem;
+  margin: 0 0 12px;
+  color: #f0fdf4;
+  letter-spacing: -.015em;
+}
+
+h3 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+  color: #bbf7d0;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.small {
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+label {
+  display: block;
+  font-weight: 700;
+  font-size: .88rem;
+  margin: 13px 0 7px;
+  color: #cce8d3;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid #344b39;
+  border-radius: 10px;
+  padding: 11px 12px;
+  font: inherit;
+  color: #e8f5ec;
+  background: #090f0b;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, .13);
+}
+
+select option {
+  background: #111a14;
+  color: #e8f5ec;
+}
+
+textarea {
+  min-height: 150px;
+  resize: vertical;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .86rem;
+  line-height: 1.75;
+}
+
+.row {
+  display: flex;
+  gap: 14px;
+  align-items: end;
+}
+
+.row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 17px;
+}
+
+button,
+.filebutton {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 11px 15px;
+  font-weight: 750;
+  cursor: pointer;
+  font: inherit;
+  font-size: .88rem;
+  transition: background .2s ease, transform .2s ease,
+              border-color .2s ease, box-shadow .2s ease;
+}
+
+button:hover,
+.filebutton:hover {
+  transform: translateY(-2px);
+}
+
+button:active,
+.filebutton:active {
+  transform: translateY(0);
+}
+
+.primary {
+  background: linear-gradient(135deg, #22c55e, #15803d);
+  color: #041108;
+  box-shadow: 0 5px 16px rgba(34, 197, 94, .16);
+}
+
+.primary:hover {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  box-shadow: 0 7px 22px rgba(34, 197, 94, .25);
+}
+
+.secondary,
+.filebutton {
+  background: #193523;
+  color: #bbf7d0;
+  border-color: #31563a;
+}
+
+.secondary:hover,
+.filebutton:hover {
+  background: #21482e;
+  border-color: #4ade80;
+}
+
+.outline {
+  background: transparent;
+  border-color: #405744;
+  color: #d1e7d6;
+}
+
+.outline:hover {
+  background: #18291c;
+  border-color: #4ade80;
+}
+
+.stat {
+  padding: 21px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat::after {
+  content: "";
+  position: absolute;
+  width: 85px;
+  height: 85px;
+  right: -32px;
+  bottom: -38px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, .08);
+}
+
+.stat .label {
+  font-size: .8rem;
+  color: #a8c2ae;
+  font-weight: 750;
+}
+
+.stat .num {
+  font-size: clamp(1.7rem, 3vw, 2.15rem);
+  color: #4ade80;
+  font-weight: 850;
+  margin-top: 7px;
+  letter-spacing: -.05em;
+}
+
+.stat .sub {
+  font-size: .78rem;
+  color: #839b89;
+}
+
+.notice {
+  background: #11291a;
+  border: 1px solid #285537;
+  color: #b8e8c4;
+  padding: 13px 14px;
+  border-radius: 11px;
+  font-size: .86rem;
+  margin-top: 14px;
+}
+
+.error {
+  background: #301716;
+  border: 1px solid #78332e;
+  color: #fca5a5;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin: 13px 0;
+  display: none;
+}
+
+.pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 11px 0;
+}
+
+.pill {
+  display: inline-block;
+  background: #173523;
+  color: #86efac;
+  border: 1px solid #2c5739;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.tablewrap {
+  overflow: auto;
+  border: 1px solid #2a4030;
+  border-radius: 12px;
+  background: #0b120d;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: .87rem;
+  white-space: nowrap;
+}
+
+th,
+td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #243529;
+  text-align: left;
+}
+
+th {
+  background: #193523;
+  color: #a7f3bc;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .065em;
+}
+
+td {
+  color: #d5e8d9;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr {
+  transition: background .15s ease;
+}
+
+tbody tr:hover {
+  background: #15271a;
+}
+
+.sectionhead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 13px;
+}
+
+.sectionhead h2 {
+  margin: 0;
+}
+
+.empty {
+  padding: 26px;
+  text-align: center;
+  color: #8da594;
+}
+
+.insight {
+  padding: 16px;
+  background: #101b13;
+  border: 1px solid #2c4432;
+  border-left: 3px solid #22c55e;
+  border-radius: 12px;
+  margin-top: 12px;
+  transition: background .2s ease;
+}
+
+.insight:hover {
+  background: #14251a;
+}
+
+.insight strong {
+  color: #86efac;
+}
+
+.insight p {
+  margin: 7px 0 0;
+  font-size: .9rem;
+  color: #a8bdae;
+}
+
+footer {
+  text-align: center;
+  color: #839889;
+  padding: 27px 15px;
+  font-size: .82rem;
+  background: #070b08;
+  border-top: 1px solid #203526;
+}
+
+/* Scrollbar styling */
+* {
+  scrollbar-color: #31563a #0b120d;
+  scrollbar-width: thin;
+}
+
+::selection {
+  background: #166534;
+  color: #fff;
+}
+
+/* Tablet layout */
+@media (max-width: 850px) {
+  .controls,
+  .two {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  header {
+    padding: 40px 20px 35px;
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 460px) {
+  .container {
+    padding: 20px 12px 35px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 11px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 13px;
+  }
+
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .stat {
+    padding: 14px;
+  }
+
+  .stat .num {
+    font-size: 1.55rem;
+  }
+
+  .btns button,
+  .btns .filebutton {
+    text-align: center;
+  }
+
+  .sectionhead {
+    align-items: flex-start;
+  }
+}
+</style>
+
+</head>
+<body>
+<header><div class="hero">
+<div class="eyebrow">Macro Project · Data Mining</div>
+<h1>Market Basket Analysis</h1>
+<p class="subtitle">Customer Purchase Pattern Discovery using the Apriori Algorithm. Find frequently purchased products, discover association rules, and turn transaction data into practical placement and bundle ideas.</p>
+</div></header>
+<main class="container">
+<div class="grid controls">
+<section class="card">
+<h2>1. Transaction Dataset</h2>
+<p class="muted">Enter one transaction per line. Separate products with commas. Product names are case-insensitive and extra spaces are removed.</p>
+<label for="transactions">Transactions</label>
+<textarea id="transactions" spellcheck="false" aria-label="Transactions input"></textarea>
+<div class="btns">
+<button class="secondary" id="sampleBtn">Load sample data</button>
+<label class="filebutton" for="csvFile" style="margin:0;cursor:pointer">Import CSV</label>
+<input id="csvFile" type="file" accept=".csv,.txt" hidden>
+<button class="outline" id="clearBtn">Clear</button>
+</div>
+<div class="notice">CSV tip: use one transaction per row with product names in separate columns, or a single column with comma-separated items. A header row is optional; the importer skips common transaction headers.</div>
+</section>
+<section class="card">
+<h2>2. Apriori Settings</h2>
+<p class="muted">Adjust thresholds, then run the analysis. Support is the share of transactions containing an itemset; confidence measures rule reliability.</p>
+<div class="row">
+<div><label for="support">Minimum support (%)</label><input id="support" type="number" min="1" max="100" step="1" value="30"></div>
+<div><label for="confidence">Minimum confidence (%)</label><input id="confidence" type="number" min="1" max="100" step="1" value="60"></div>
+</div>
+<div class="row">
+<div><label for="maxLength">Maximum itemset size</label><select id="maxLength"><option value="2">2 items</option><option value="3" selected>3 items</option><option value="4">4 items</option><option value="5">5 items</option></select></div>
+<div><label for="sortRules">Sort rules by</label><select id="sortRules"><option value="confidence">Confidence</option><option value="lift">Lift</option><option value="support">Support</option></select></div>
+</div>
+<div class="btns"><button class="primary" id="runBtn">Run Apriori Analysis</button><button class="secondary" id="exportBtn">Export results CSV</button></div>
+<div id="error" class="error" role="alert"></div>
+<p class="small">Runs locally in your browser. Your dataset is not uploaded to a server.</p>
+</section>
+</div>
+
+<div class="grid stats">
+<section class="card stat"><div class="label">Transactions</div><div class="num" id="transactionCount">0</div><div class="sub">Rows analyzed</div></section>
+<section class="card stat"><div class="label">Unique products</div><div class="num" id="productCount">0</div><div class="sub">Distinct items</div></section>
+<section class="card stat"><div class="label">Frequent itemsets</div><div class="num" id="itemsetCount">0</div><div class="sub">Meeting min support</div></section>
+<section class="card stat"><div class="label">Association rules</div><div class="num" id="ruleCount">0</div><div class="sub">Meeting min confidence</div></section>
+</div>
+
+<div class="grid two">
+<section class="card">
+<div class="sectionhead"><h2>3. Frequent Itemsets</h2><span class="pill" id="itemsetBadge">0 results</span></div>
+<p class="muted">Item combinations that occur at or above the selected minimum support.</p>
+<div class="tablewrap"><table><thead><tr><th>Items</th><th>Count</th><th>Support</th></tr></thead><tbody id="itemsetTable"><tr><td colspan="3" class="empty">Load data and run analysis.</td></tr></tbody></table></div>
+</section>
+<section class="card">
+<div class="sectionhead"><h2>4. Association Rules</h2><span class="pill" id="ruleBadge">0 results</span></div>
+<p class="muted">Rules have the form “if customers buy A, they may also buy B.” Lift above 1 indicates a positive association.</p>
+<div class="tablewrap"><table><thead><tr><th>Rule</th><th>Support</th><th>Confidence</th><th>Lift</th></tr></thead><tbody id="ruleTable"><tr><td colspan="4" class="empty">No rules yet.</td></tr></tbody></table></div>
+</section>
+</div>
+<section class="card" style="margin-top:18px">
+<div class="sectionhead"><h2>5. Business Insights</h2><span class="pill">Actionable summary</span></div>
+<p class="muted">Suggestions are generated from the strongest rules. Validate them with margin, inventory, and real-world testing before making business changes.</p>
+<div id="insights"><div class="empty">Run the analysis to generate placement and bundling ideas.</div></div>
+</section>
+<section class="card" style="margin-top:18px">
+<h2>How to interpret the metrics</h2>
+<div class="grid two">
+<div><h3>Support</h3><p class="muted">The percentage of all transactions containing the itemset. Higher support means the pattern appears more often.</p></div>
+<div><h3>Confidence</h3><p class="muted">Among transactions containing the left-hand side, the percentage that also contain the right-hand side.</p></div>
+<div><h3>Lift</h3><p class="muted">Confidence divided by the support of the right-hand side. Lift &gt; 1 suggests a positive association; around 1 suggests little association.</p></div>
+<div><h3>Apriori principle</h3><p class="muted">If an itemset is frequent, all its non-empty subsets must also be frequent. If a subset is infrequent, its supersets can be pruned.</p></div>
+</div>
+</section>
+</main>
+<footer>Market Basket Analysis System · Built with HTML, CSS and JavaScript · Apriori implementation for educational use</footer>
+<script>
+const sample = [
+"bread, butter, milk","bread, butter","bread, milk","butter, milk","bread, butter, milk",
+"bread, butter, jam","milk, cereal","bread, milk, cereal","butter, jam","bread, butter",
+"coffee, biscuits","coffee, biscuits, milk","coffee, sugar","tea, biscuits","tea, sugar",
+"bread, butter, jam","milk, cereal","bread, butter, milk","coffee, biscuits","bread, milk"
+];
+let lastResults = {transactions:[], itemsets:[], rules:[], products:[]};
+const $ = id => document.getElementById(id);
+function setError(message){const e=$('error');e.textContent=message;e.style.display=message?'block':'none';}
+function parseTransactions(raw){
+  const rows=raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const tx=[];
+  for(const row of rows){
+    let parts;
+    if(row.includes('\t')) parts=row.split('\t');
+    else parts=row.split(',');
+    const items=[...new Set(parts.map(x=>x.trim().replace(/^["']|["']$/g,'').toLowerCase()).filter(x=>x && !/^(transaction(_?id)?|transaction id|items?|products?)$/i.test(x)))];
+    if(items.length) tx.push(items);
+  }
+  return tx;
+}
+function keyOf(items){return [...items].sort().join('\u001f');}
+function combinations(arr,k,start=0,prefix=[],out=[]){
+  if(prefix.length===k){out.push(prefix.slice());return out;}
+  for(let i=start;i<=arr.length-(k-prefix.length);i++){prefix.push(arr[i]);combinations(arr,k,i+1,prefix,out);prefix.pop();}
+  return out;
+}
+function apriori(transactions,minSupport,maxLen){
+  const n=transactions.length, counts=new Map(), itemsets=[];
+  const allItems=[...new Set(transactions.flat())].sort();
+  let candidates=allItems.map(x=>[x]), frequent=[];
+  for(let k=1;k<=maxLen && candidates.length;k++){
+    const level=[];
+    for(const cand of candidates){
+      let count=0;
+      for(const tx of transactions){if(cand.every(x=>tx.includes(x)))count++;}
+      const support=count/n;
+      if(support+1e-12>=minSupport){
+        const key=keyOf(cand);counts.set(key,{items:cand.slice(),count,support});level.push(cand);
+        itemsets.push({items:cand.slice(),count,support});
+      }
+    }
+    frequent=level;
+    if(k===maxLen || !frequent.length) break;
+    const nextMap=new Map();
+    for(let i=0;i<frequent.length;i++) for(let j=i+1;j<frequent.length;j++){
+      const union=[...new Set([...frequent[i],...frequent[j]])].sort();
+      if(union.length!==k+1) continue;
+      // Apriori pruning: all k-sized subsets must be frequent.
+      const subsets=combinations(union,k);
+      if(subsets.every(s=>counts.has(keyOf(s)))) nextMap.set(keyOf(union),union);
+    }
+    candidates=[...nextMap.values()];
+  }
+  return {itemsets,counts};
+}
+function getRules(transactions,itemsetResult,minConfidence){
+  const {itemsets,counts}=itemsetResult, rules=[];
+  for(const itemset of itemsets.filter(x=>x.items.length>=2)){
+    const items=itemset.items;
+    for(let size=1;size<items.length;size++){
+      for(const lhs of combinations(items,size)){
+        const rhs=items.filter(x=>!lhs.includes(x));
+        const lhsData=counts.get(keyOf(lhs)), rhsData=counts.get(keyOf(rhs));
+        if(!lhsData||!rhsData) continue;
+        const confidence=itemset.support/lhsData.support;
+        const lift=confidence/rhsData.support;
+        if(confidence+1e-12>=minConfidence) rules.push({lhs,rhs,support:itemset.support,confidence,lift,count:itemset.count});
+      }
+    }
+  }
+  const unique=new Map();
+  for(const r of rules) unique.set(keyOf(r.lhs)+'->'+keyOf(r.rhs),r);
+  return [...unique.values()];
+}
+function fmtPct(x){return (x*100).toFixed(1)+'%';}
+function fmtNum(x){return x.toFixed(2);}
+function renderTable(id,rows,cols,emptyText){
+  const body=$(id);
+  if(!rows.length){body.innerHTML=`<tr><td colspan="${cols}" class="empty">${emptyText}</td></tr>`;return;}
+  body.innerHTML=rows.map(row=>'<tr>'+row.map(v=>'<td>'+escapeHtml(String(v))+'</td>').join('')+'</tr>').join('');
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function runAnalysis(){
+  setError('');
+  const transactions=parseTransactions($('transactions').value);
+  const s=Number($('support').value)/100,c=Number($('confidence').value)/100,maxLen=Number($('maxLength').value);
+  if(!transactions.length){setError('Please enter at least one transaction or load the sample dataset.');return;}
+  if(!(s>0&&s<=1)||!(c>0&&c<=1)){setError('Minimum support and confidence must be greater than 0 and no more than 100.');return;}
+  const products=[...new Set(transactions.flat())].sort();
+  if(products.length<1){setError('No products were detected. Separate products with commas.');return;}
+  if(products.length>150){setError('This browser demo is intended for up to 150 distinct products. Reduce the dataset for responsive analysis.');return;}
+  const result=apriori(transactions,s,maxLen);
+  const rules=getRules(transactions,result,c);
+  const sortBy=$('sortRules').value;
+  rules.sort((a,b)=>b[sortBy]-a[sortBy] || b.lift-a.lift || b.support-a.support);
+  result.itemsets.sort((a,b)=>b.items.length-a.items.length||b.support-a.support||a.items.join().localeCompare(b.items.join()));
+  lastResults={transactions,itemsets:result.itemsets,rules,products};
+  $('transactionCount').textContent=transactions.length;
+  $('productCount').textContent=products.length;
+  $('itemsetCount').textContent=result.itemsets.length;
+  $('ruleCount').textContent=rules.length;
+  $('itemsetBadge').textContent=result.itemsets.length+' results';
+  $('ruleBadge').textContent=rules.length+' results';
+  renderTable('itemsetTable',result.itemsets.map(x=>[x.items.join(' + '),x.count,fmtPct(x.support)]),3,'No frequent itemsets at this support threshold. Try lowering minimum support.');
+  renderTable('ruleTable',rules.map(r=>[r.lhs.join(' + ')+' → '+r.rhs.join(' + '),fmtPct(r.support),fmtPct(r.confidence),fmtNum(r.lift)]),4,'No rules met these thresholds. Try lowering minimum support or confidence.');
+  renderInsights(rules,transactions.length);
+}
+function renderInsights(rules,n){
+  const el=$('insights');
+  if(!rules.length){el.innerHTML='<div class="empty">No rules meet the current thresholds. Lower support or confidence, or try more transaction data.</div>';return;}
+  const top=rules.slice(0,5);
+  el.innerHTML=top.map((r,i)=>{
+    const lhs=r.lhs.join(' + '),rhs=r.rhs.join(' + ');
+    const kind=r.lift>1.05?'Positive association':r.lift<0.95?'Weaker-than-baseline association':'Near-baseline association';
+    const action=r.lift>1.05?`Test displaying <strong>${escapeHtml(lhs)}</strong> near <strong>${escapeHtml(rhs)}</strong>, or trial a <strong>${escapeHtml(lhs)} + ${escapeHtml(rhs)}</strong> bundle.`:`Review this pattern before making a placement or bundling decision; lift does not show a strong positive association.`;
+    return `<div class="insight"><strong>${i+1}. ${escapeHtml(lhs)} → ${escapeHtml(rhs)}</strong><div class="pills"><span class="pill">Support ${fmtPct(r.support)}</span><span class="pill">Confidence ${fmtPct(r.confidence)}</span><span class="pill">Lift ${fmtNum(r.lift)}</span></div><p>${kind}. ${action}</p></div>`;
+  }).join('');
+}
+function downloadCSV(){
+  if(!lastResults.transactions.length){setError('Run an analysis before exporting results.');return;}
+  const lines=[['Section','Items / Rule','Count','Support','Confidence','Lift']];
+  lastResults.itemsets.forEach(x=>lines.push(['Frequent itemset',x.items.join(' + '),x.count,fmtPct(x.support),'','']));
+  lastResults.rules.forEach(r=>lines.push(['Association rule',r.lhs.join(' + ')+' -> '+r.rhs.join(' + '),r.count,fmtPct(r.support),fmtPct(r.confidence),fmtNum(r.lift)]));
+  const csv=lines.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='market_basket_analysis_results.csv';a.click();URL.revokeObjectURL(url);
+}
+$('sampleBtn').addEventListener('click',()=>{$('transactions').value=sample.join('\n');setError('');});
+$('clearBtn').addEventListener('click',()=>{$('transactions').value='';setError('');});
+$('runBtn').addEventListener('click',runAnalysis);
+$('exportBtn').addEventListener('click',downloadCSV);
+$('sortRules').addEventListener('change',()=>{if(lastResults.transactions.length)runAnalysis();});
+$('csvFile').addEventListener('change',async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{$('transactions').value=await file.text();setError('');}
+ catch(err){setError('Could not read that file. Please try another CSV or TXT file.');}
+ e.target.value='';
+});
+// Load a useful demonstration automatically.
+$('transactions').value=sample.join('\n');
+runAnalysis();
+</script>
+</body>
+</html> 
+
